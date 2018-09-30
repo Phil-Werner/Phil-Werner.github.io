@@ -1,1 +1,2925 @@
-Hello World!!!!!!!
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Phaser 3 Game </title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.1.1/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+    var config = {
+        type: Phaser.AUTO,
+        width: 1190,
+        height: 620,
+        physics: {
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 },
+                debug: false
+            }
+        },
+        scene: {
+            preload: preload,
+            create: create,
+            update: update
+        }
+    };
+
+    var player;
+    var platforms;
+    var cursors;
+    var playerSelected = [null, 0, 0];
+    var objectIsSelected = false;
+    var playerMoving = false;
+    var tileSelected = null;
+    var tileIsSelected = false;
+    let availableMoves;
+    let starGroup;
+    let destination;
+    let testCoor;
+    let playersTurn = true;
+    let MAXHEIGHT = 28;
+    let MAXWIDTH = 26;
+    let selfScene;
+    let enemyArray;
+    let enemyIndex;
+    let awaitingEnemySelection = false;
+    let arrayOfNearbyEnemies;
+    let enemyDying = false;
+    let enemyBDying = false;
+    let enemyCDying = false;
+
+
+    var grid =     [[3, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]];
+
+
+    var cameFromGrid;
+
+    //grid[22][3] = 1;
+    //grid[21][13] = 2;
+
+    var heroCoor = [2, 12];
+    var enemyCoor = [20, 1];
+
+    var enemyBCoor = [20, 2];
+
+    var enemyCCoor = [20, 3];
+
+    //console.log(heroCoor[0]);
+
+    grid[heroCoor[1]][heroCoor[0]] = 1;
+    grid[enemyCoor[1]][enemyCoor[0]] = 2;
+    grid[enemyBCoor[1]][enemyBCoor[0]] = 2;
+    grid[enemyCCoor[1]][enemyCCoor[0]] = 2;
+
+    var numLiveEnemies = 3;
+
+    // grid[4][23] = 2;
+    // grid[3][22] = 2;
+    // grid[2][22] = 2;
+    // grid[1][21] = 2;
+
+
+    var game = new Phaser.Game(config);
+
+    function preload ()
+    {
+        this.load.image('sky', 'assets/sky.png');
+        this.load.image('ground', 'assets/platform.png');
+        this.load.image('star', 'assets/star.png');
+        this.load.image('bomb', 'assets/bomb.png');
+        this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
+        this.load.image('spark', 'assets/blue.png');
+        this.load.image('levelOne', 'assets/grid5.png');
+
+        this.load.image('idle1', 'assets/idle1.png');
+        this.load.image('idle2', 'assets/idle2.png');
+        this.load.image('idle3', 'assets/idle3.png');
+        this.load.image('idle4', 'assets/idle4.png');
+        this.load.image('idle5', 'assets/idle5.png');
+        this.load.image('idle6', 'assets/idle6.png');
+        this.load.image('idle7', 'assets/idle7.png');
+        this.load.image('idle8', 'assets/idle8.png');
+        this.load.image('idle9', 'assets/idle9.png');
+        this.load.image('idle10', 'assets/idle10.png');
+
+        this.load.image('run1', 'assets/run1.png');
+        this.load.image('run2', 'assets/run2.png');
+        this.load.image('run3', 'assets/run3.png');
+        this.load.image('run4', 'assets/run4.png');
+        this.load.image('run5', 'assets/run5.png');
+        this.load.image('run6', 'assets/run6.png');
+        this.load.image('run7', 'assets/run7.png');
+        this.load.image('run8', 'assets/run8.png');
+        this.load.image('run9', 'assets/run9.png');
+        this.load.image('run10', 'assets/run10.png');
+
+        this.load.image('runl1', 'assets/runl1.png');
+        this.load.image('runl2', 'assets/runl2.png');
+        this.load.image('runl3', 'assets/runl3.png');
+        this.load.image('runl4', 'assets/runl4.png');
+        this.load.image('runl5', 'assets/runl5.png');
+        this.load.image('runl6', 'assets/runl6.png');
+        this.load.image('runl7', 'assets/runl7.png');
+        this.load.image('runl8', 'assets/runl8.png');
+        this.load.image('runl9', 'assets/runl9.png');
+        this.load.image('runl10', 'assets/runl10.png');
+
+        this.load.image('barbIdle1', 'assets/barbIdleLeft1.png');
+        this.load.image('barbIdle2', 'assets/barbIdleLeft2.png');
+        this.load.image('barbIdle3', 'assets/barbIdleLeft3.png');
+        this.load.image('barbIdle4', 'assets/barbIdleLeft4.png');
+        this.load.image('barbIdle5', 'assets/barbIdleLeft5.png');
+        this.load.image('barbIdle6', 'assets/barbIdleLeft6.png');
+
+        this.load.image('barbWalkLeft1', 'assets/barbWalkLeft1.png');
+        this.load.image('barbWalkLeft2', 'assets/barbWalkLeft2.png');
+        this.load.image('barbWalkLeft3', 'assets/barbWalkLeft3.png');
+        this.load.image('barbWalkLeft4', 'assets/barbWalkLeft4.png');
+        this.load.image('barbWalkLeft5', 'assets/barbWalkLeft5.png');
+        this.load.image('barbWalkLeft6', 'assets/barbWalkLeft6.png');
+        this.load.image('barbWalkLeft7', 'assets/barbWalkLeft7.png');
+        this.load.image('barbWalkLeft8', 'assets/barbWalkLeft8.png');
+        this.load.image('barbWalkLeft9', 'assets/barbWalkLeft9.png');
+        this.load.image('barbWalkLeft10', 'assets/barbWalkLeft10.png');
+        this.load.image('barbWalkLeft11', 'assets/barbWalkLeft11.png');
+        this.load.image('barbWalkLeft12', 'assets/barbWalkLeft12.png');
+        this.load.image('barbWalkLeft13', 'assets/barbWalkLeft13.png');
+        this.load.image('barbWalkLeft14', 'assets/barbWalkLeft14.png');
+
+        this.load.image('barbWalk1', 'assets/barbWalk1.png');
+        this.load.image('barbWalk2', 'assets/barbWalk2.png');
+        this.load.image('barbWalk3', 'assets/barbWalk3.png');
+        this.load.image('barbWalk4', 'assets/barbWalk4.png');
+        this.load.image('barbWalk5', 'assets/barbWalk5.png');
+        this.load.image('barbWalk6', 'assets/barbWalk6.png');
+        this.load.image('barbWalk7', 'assets/barbWalk7.png');
+        this.load.image('barbWalk8', 'assets/barbWalk8.png');
+        this.load.image('barbWalk9', 'assets/barbWalk9.png');
+        this.load.image('barbWalk10', 'assets/bwten.png');
+        this.load.image('barbWalk11', 'assets/barbWalk11.png');
+        this.load.image('barbWalk12', 'assets/barbWalk12.png');
+        this.load.image('barbWalk13', 'assets/barbWalk13.png');
+        this.load.image('barbWalk14', 'assets/barbWalk14.png');
+
+        this.load.image('heroAttack1', 'assets/heroAttack1.png');
+        this.load.image('heroAttack2', 'assets/heroAttack2.png');
+        this.load.image('heroAttack3', 'assets/heroAttack3.png');
+        this.load.image('heroAttack4', 'assets/heroAttack4.png');
+        this.load.image('heroAttack5', 'assets/heroAttack5.png');
+        this.load.image('heroAttack6', 'assets/heroAttack6.png');
+        this.load.image('heroAttack7', 'assets/heroAttack7.png');
+        this.load.image('heroAttack8', 'assets/heroAttack8.png');
+        this.load.image('heroAttack9', 'assets/heroAttack9.png');
+        this.load.image('heroAttack10', 'assets/heroAttack10.png');
+
+        this.load.image('heroAttackLeft1', 'assets/heroAttackLeft1.png');
+        this.load.image('heroAttackLeft2', 'assets/heroAttackLeft2.png');
+        this.load.image('heroAttackLeft3', 'assets/heroAttackLeft3.png');
+        this.load.image('heroAttackLeft4', 'assets/heroAttackLeft4.png');
+        this.load.image('heroAttackLeft5', 'assets/heroAttackLeft5.png');
+        this.load.image('heroAttackLeft6', 'assets/heroAttackLeft6.png');
+        this.load.image('heroAttackLeft7', 'assets/heroAttackLeft7.png');
+        this.load.image('heroAttackLeft8', 'assets/heroAttackLeft8.png');
+        this.load.image('heroAttackLeft9', 'assets/heroAttackLeft9.png');
+        this.load.image('heroAttackLeft10', 'assets/heroAttackLeft10.png');
+
+        this.load.image('barbAttack1', 'assets/barbAttack1.png');
+        this.load.image('barbAttack2', 'assets/barbAttack2.png');
+        this.load.image('barbAttack3', 'assets/barbAttack3.png');
+        this.load.image('barbAttack4', 'assets/barbAttack4.png');
+        this.load.image('barbAttack5', 'assets/barbAttack5.png');
+        this.load.image('barbAttack6', 'assets/barbAttack6.png');
+        this.load.image('barbAttack7', 'assets/barbAttack7.png');
+        this.load.image('barbAttack8', 'assets/barbAttack8.png');
+
+        this.load.image('barbAttackLeft1', 'assets/barbAttackLeft1.png');
+        this.load.image('barbAttackLeft2', 'assets/barbAttackLeft2.png');
+        this.load.image('barbAttackLeft3', 'assets/barbAttackLeft3.png');
+        this.load.image('barbAttackLeft4', 'assets/barbAttackLeft4.png');
+        this.load.image('barbAttackLeft5', 'assets/barbAttackLeft5.png');
+        this.load.image('barbAttackLeft6', 'assets/barbAttackLeft6.png');
+        this.load.image('barbAttackLeft7', 'assets/barbAttackLeft7.png');
+        this.load.image('barbAttackLeft8', 'assets/barbAttackLeft8.png');
+
+        this.load.image('barbDead1', 'assets/dead1.png');
+        this.load.image('barbDead2', 'assets/dead2.png');
+        this.load.image('barbDead3', 'assets/dead3.png');
+        this.load.image('barbDead4', 'assets/dead4.png');
+        this.load.image('barbDead5', 'assets/dead5.png');
+        this.load.image('barbDead6', 'assets/dead6.png');
+    }
+
+    function create ()
+    {
+        starGroup = this.add.group();
+
+        //console.log(gridData[0].length);
+        //console.log(gridData.length);
+
+        this.add.image(596, 316, 'levelOne');
+
+        // var emitter = this.add.particles('spark').createEmitter({
+        //     x: 400,
+        //     y: 300,
+        //     blendMode: 'SCREEN',
+        //     scale: { start: 0.05, end: 0 },
+        //     speed: { min: -100, max: 100 },
+        //     quantity: 15
+        // });
+
+        // emitter.setEmitZone({
+        //     source: new Phaser.Geom.Circle(0, 0, 15),
+        //     type: 'edge',
+        //     quantity: 50
+        // });
+
+
+        // platforms = this.physics.add.staticGroup();
+
+        // platforms.create(400, 568, 'ground').setScale(2).refreshBody();
+
+        // platforms.create(600, 400, 'ground');
+        // platforms.create(50, 250, 'ground');
+        // platforms.create(750, 220, 'ground');
+
+        let startingCoordinates = calculateCoordinates([heroCoor[0], heroCoor[1]]);
+        let enemyStarCoor = calculateCoordinates([enemyCoor[0], enemyCoor[1]]);
+        let enemyBStartCoor = calculateCoordinates([enemyBCoor[0], enemyBCoor[1]]);
+        let enemyCStartCoor = calculateCoordinates([enemyCCoor[0], enemyCCoor[1]]);
+
+       // player = this.physics.add.sprite(startingCoordinates[0], startingCoordinates[1] - 15, 'dude');
+
+       // player.setScale(0.5);
+
+
+
+
+//        star = this.physics.add.sprite(400, 450, 'star');
+
+
+ //       star.setCollideWorldBounds(true);
+
+        //player.setBounce(0);
+       // player.setCollideWorldBounds(true);
+
+     //   player.setInteractive();
+ //       star.setInteractive();
+
+     //   player.on('clicked', clickFunc, this);
+
+
+
+ //       star.on('clicked', clickFunc, this);
+
+       // bullet = this.physics.add.sprite(0, 0, 'bomb');
+
+       // bullet.setActive(false);
+       // bullet.setVisible(false);
+
+        // bomb = new Bullet(0, 0, 'bomb');
+        // bomb.alive = false;
+
+        this.input.on('gameobjectup', function (pointer, gameObject)
+        {
+            gameObject.emit('clicked', gameObject);
+        }, this);
+
+        this.anims.create({
+            key: 'left',
+             frames: [
+                { key: 'runl1' },
+                { key: 'runl2' },
+                { key: 'runl3' },
+                { key: 'runl4' },
+                { key: 'runl5' },
+                { key: 'runl6' },
+                { key: 'runl7' },
+                { key: 'runl8' },
+                { key: 'runl9' },
+                { key: 'runl10', duration: 50 }
+            ],
+            frameRate: 10,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'turn',
+            frames: [ { key: 'dude', frame: 4 } ],
+            frameRate: 20
+        });
+
+        this.anims.create({
+            key: 'right',
+            frames: [
+                { key: 'run1' },
+                { key: 'run2' },
+                { key: 'run3' },
+                { key: 'run4' },
+                { key: 'run5' },
+                { key: 'run6' },
+                { key: 'run7' },
+                { key: 'run8' },
+                { key: 'run9' },
+                { key: 'run10', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'snooze',
+            frames: [
+                { key: 'idle1' },
+                { key: 'idle2' },
+                { key: 'idle3' },
+                { key: 'idle4' },
+                { key: 'idle5' },
+                { key: 'idle6' },
+                { key: 'idle7' },
+                { key: 'idle8' },
+                { key: 'idle9' },
+                { key: 'idle10', duration: 50 }
+            ],
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'barbSnooze',
+            frames: [
+                { key: 'barbIdle1' },
+                { key: 'barbIdle2' },
+                { key: 'barbIdle3' },
+                { key: 'barbIdle4' },
+                { key: 'barbIdle5' },
+                { key: 'barbIdle6', duration: 50 }
+            ],
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'barbWalkLeft',
+            frames: [
+                { key: 'barbWalkLeft1' },
+                { key: 'barbWalkLeft2' },
+                { key: 'barbWalkLeft3' },
+                { key: 'barbWalkLeft4' },
+                { key: 'barbWalkLeft5' },
+                { key: 'barbWalkLeft6' },
+                { key: 'barbWalkLeft7' },
+                { key: 'barbWalkLeft8' },
+                { key: 'barbWalkLeft9' },
+                { key: 'barbWalkLeft10' },
+                { key: 'barbWalkLeft11' },
+                { key: 'barbWalkLeft12' },
+                { key: 'barbWalkLeft13' },
+                { key: 'barbWalkLeft14', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'barbWalk',
+            frames: [
+                { key: 'barbWalk1' },
+                { key: 'barbWalk2' },
+                { key: 'barbWalk3' },
+                { key: 'barbWalk4' },
+                { key: 'barbWalk5' },
+                { key: 'barbWalk6' },
+                { key: 'barbWalk7' },
+                { key: 'barbWalk8' },
+                { key: 'barbWalk9' },
+                { key: 'barbWalk10' },
+                { key: 'barbWalk11' },
+                { key: 'barbWalk12' },
+                { key: 'barbWalk13' },
+                { key: 'barbWalk14', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'barbAttack',
+            frames: [
+                { key: 'barbAttack1' },
+                { key: 'barbAttack2' },
+                { key: 'barbAttack3' },
+                { key: 'barbAttack4' },
+                { key: 'barbAttack5' },
+                { key: 'barbAttack6' },
+                { key: 'barbAttack7' },
+                { key: 'barbAttack8', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: 0,
+            onComplete: attackComplete
+        });
+
+        this.anims.create({
+            key: 'barbAttackLeft',
+            frames: [
+                { key: 'barbAttackLeft1' },
+                { key: 'barbAttackLeft2' },
+                { key: 'barbAttackLeft3' },
+                { key: 'barbAttackLeft4' },
+                { key: 'barbAttackLeft5' },
+                { key: 'barbAttackLeft6' },
+                { key: 'barbAttackLeft7' },
+                { key: 'barbAttackLeft8', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: 0,
+            onComplete: attackComplete
+        });
+
+        this.anims.create({
+            key: 'heroAttack',
+            frames: [
+                { key: 'heroAttack1' },
+                { key: 'heroAttack2' },
+                { key: 'heroAttack3' },
+                { key: 'heroAttack4' },
+                { key: 'heroAttack5' },
+                { key: 'heroAttack6' },
+                { key: 'heroAttack7' },
+                { key: 'heroAttack8' },
+                { key: 'heroAttack9' },
+                { key: 'heroAttack10', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: 0,
+            onComplete: heroAttackComplete
+        });
+
+        this.anims.create({
+            key: 'heroAttackLeft',
+            frames: [
+                { key: 'heroAttackLeft1' },
+                { key: 'heroAttackLeft2' },
+                { key: 'heroAttackLeft3' },
+                { key: 'heroAttackLeft4' },
+                { key: 'heroAttackLeft5' },
+                { key: 'heroAttackLeft6' },
+                { key: 'heroAttackLeft7' },
+                { key: 'heroAttackLeft8' },
+                { key: 'heroAttackLeft9' },
+                { key: 'heroAttackLeft10', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: 0,
+            onComplete: heroAttackComplete
+        });
+
+        this.anims.create({
+            key: 'barbDead',
+            frames: [
+                { key: 'barbDead1' },
+                { key: 'barbDead2' },
+                { key: 'barbDead3' },
+                { key: 'barbDead4' },
+                { key: 'barbDead5' },
+                { key: 'barbDead6', duration: 50 }
+            ],
+            frameRate: 16,
+            repeat: 0,
+            onComplete: enemyFinishedDying
+        });
+
+
+
+        player = this.add.sprite(startingCoordinates[0] + 6, startingCoordinates[1] - 14, 'idle1').play('snooze');
+        player.setScale(0.11);
+        player.depth = 2;
+
+        enemy = this.physics.add.sprite(enemyStarCoor[0] - 2, enemyStarCoor[1] - 14, 'barbIdle1').play('barbSnooze');
+        enemy.setScale(0.3);
+        enemy.depth = 2;
+
+        enemy.coor = [enemyCoor[0], enemyCoor[1]];
+
+        enemy.attackingThisTurn = false;
+
+        enemy.hitPoints = 3;
+        enemy.isDead = false;
+
+        enemyB = this.physics.add.sprite(enemyBStartCoor[0] - 2, enemyBStartCoor[1] - 14, 'barbIdle1').play('barbSnooze');
+        //enemyB.setTint(0xff0000);
+        enemyB.setScale(0.3);
+
+        enemyB.coor = [enemyBCoor[0], enemyBCoor[1]];
+
+        enemyB.attackingThisTurn = false;
+
+        enemyB.hitPoints = 3;
+        enemyB.isDead = false;
+
+       // enemyB.anims.play('barbWalkLeft');
+
+        enemyC = this.physics.add.sprite(enemyCStartCoor[0] - 2, enemyCStartCoor[1] - 14, 'barbIdle1').play('barbSnooze');
+        enemyC.setTint(0xff0000);
+        enemyC.setScale(0.3);
+
+        enemyC.coor = [enemyCCoor[0], enemyCCoor[1]];
+
+        enemyC.hitPoints = 3;
+
+        enemyC.attackingThisTurn = false;
+        enemyC.isDead = false;
+        //enemy.anims.play('barbWalkLeft');
+
+       // let enemyArray = [enemy, enemyB, enemyC];
+        enemyArray = [enemy, enemyB, enemyC];
+        enemyIndex = 0;
+
+        //cursors = this.input.keyboard.createCursorKeys();
+
+       // this.physics.add.collider(player, platforms);
+
+
+
+        this.input.on('pointerdown', function (pointer)
+        {
+
+
+            let hexClicked = determineWhichHex(pointer.x, pointer.y);
+
+            if (playersTurn) {
+
+               // console.log("@!@!@!!@!@!!@!@@!@@!!@!@@!");
+
+                if (!awaitingEnemySelection) {
+
+                    enemyIndex = 0;
+
+                    if (tileIsSelected === false) {
+
+                        if (tileCanBeSelected(hexClicked)) {
+
+                            tileSelected = hexClicked;
+                            tileIsSelected = true;
+                            console.log("This worked too!!!!!!!!!!!!!");
+
+                            //let coordinates = calculateCoordinates([2, 24]);
+                            let coordinates;
+
+                            availableMoves = generateAvailableMoves(heroCoor, 7);
+
+                           // console.log(availableMoves);
+
+
+                            //displayAvailableMoves(tileSelected, 3);
+
+                            //let xCoordinate = (hexClicked[0] + 1) * 30;
+                            //let yCoordinate = ((hexClicked[1] - 0) * 3/4 * 28) - 5;
+
+                            //console.log("hexClicked[1] = ", hexClicked[1]);
+
+                            //console.log("xCoor = ", xCoordinate, "yCoor = ", yCoordinate);
+
+                            //console.log("Over Here ", availableMoves.length)
+
+                            for (let i = 0; i < availableMoves.length; i++) {
+
+                                coordinates = calculateCoordinates(availableMoves[i]);
+                                // star = this.physics.add.sprite(coordinates[0], coordinates[1], 'star');
+                                // star.depth = 1;
+
+                                starGroup.create(coordinates[0], coordinates[1], 'star');
+                            }
+
+                           // star = this.physics.add.sprite(coordinates[0], coordinates[1], 'star');
+
+
+
+                        }
+                    } else {        //tile is selected
+
+                        if (arrayIncludesCoordinates(availableMoves, hexClicked)) {
+                            console.log("AwesomeSauce");
+
+                            //player.x = calculateCoordinates(hexClicked)[0];
+                            //player.y = calculateCoordinates(hexClicked)[1] - 15;
+
+                            tileIsSelected = false;
+
+                            //star.getChildren().map(child => child.destroy());
+
+                            //console.log("Blah", star);
+                            //star.visible = false;
+                            //star.destroy();
+
+                            //console.log(starGroup);
+
+                            //starGroup.clear(true, true);
+
+                            starGroup.getChildren().forEach(function(elm) {
+                                if (elm.active) {
+                                    elm.destroy();
+                                }
+                               //elm.clear(false, true);
+                            });
+
+                            starGroup.clear();
+
+                            playerMoving = true;
+
+                            let heroCoorCoor = calculateCoordinates(heroCoor);
+                            let hexClickedCoor = calculateCoordinates(hexClicked);
+
+                           // console.log("heroCoor = ", heroCoor);
+
+                            let hexPath = determinePath(hexClicked, heroCoor);
+
+
+                           //  if (heroCoorCoor[0] < hexClickedCoor[0]) {
+
+                           //      player.setVelocityX(160)
+                           //      player.anims.play('right', true);
+                           //      movingRight = true;
+
+                           //  } else {
+
+                           //      player.setVelocityX(-160);
+                           //      player.anims.play('left', true);
+                           //      movingLeft = true;
+
+                           //  }
+
+                           // // this.physics.moveTo(player, hexClickedCoor[0], hexClickedCoor[1] - 15);
+
+
+
+                           //  console.log("Something amazing has happened");
+
+                           //  //moveToXY(player, heroCoorCoor[0], heroCoorCoor[1], 0, 3000);
+
+
+                           //  console.log("!!!!!", heroCoorCoor[1], hexClickedCoor[1]);
+
+                           //  if (heroCoorCoor[1] > hexClickedCoor[1]) {
+
+                           //      console.log("got here");
+
+                           //      player.setVelocityY(-200);
+                           //      movingUp = true;
+
+                           //  } else if (heroCoorCoor[1] < hexClickedCoor[1]) {
+
+                           //      console.log("ABSD");
+
+                           //      player.setVelocityY(200);
+                           //      movingDown = true;
+                           //  }
+
+                           //console.log("this = ", this);
+
+                            selfScene = this;
+
+                           // let hexPath = [[1,2], [0,3], [0,4]];
+                            let currentCoor = calculateCoordinates(hexPath[0]);
+                            var playerTween;
+                            let currentIndex = 0;
+
+                            if (player.x > currentCoor[0]) {
+                                player.anims.play('left');
+                            } else {
+                                player.anims.play('right');
+                            }
+
+                            grid[hexClicked[1]][hexClicked[0]] = 1;
+                            grid[heroCoor[1]][heroCoor[0]] = 0;
+                            heroCoor = hexClicked;
+
+                            moveToNextHex(hexPath[currentIndex]);
+
+
+                            //computer's turn logic
+
+                            // for (let i = 0; i < numLiveEnemies; i++) {
+
+                            // if hero is adjacent enemy then attack
+                            //
+                            //
+
+                            //if no hero adjacent then determine closest hero
+                            //consider all tiles around closest hero.  Closest one
+                            //in range, move there then attack
+                            //if closest tile is not in range, determine which tile is closest
+                            //to the tile in range and move there.
+                            //
+
+                            //     let heroIsAdjacent = true;
+
+                            //     if (!heroIsAdjacent) {
+
+                            //         let closestHex = determineHexClosestToHero(enemyArray[i]);
+                            //     }
+
+
+
+                            // }
+
+
+
+
+                            let adjacentHeroCoorsB = determineAdjacentHeroes(enemyBCoor);
+
+                            let adjacentHeroCoorsC = determineAdjacentHeroes(enemyCCoor);
+
+                          //  console.log("Adj hero coors = ", adjacentHeroCoors);
+
+                            console.log("Adj hero coors B = ", adjacentHeroCoorsB);
+
+                            console.log("Adj hero coors C = ", adjacentHeroCoorsC);
+
+
+                            function moveToNextHex(nextHex) {
+
+
+                              //  if (currentIndex < hexPath.length) {
+
+                                    currentCoor = calculateCoordinates(hexPath[currentIndex]);
+
+                                    playerTween = selfScene.tweens.add({
+                                        targets: player,
+                                        x: currentCoor[0] + 6,
+                                        y: currentCoor[1] - 14,
+                                        duration: 400,
+                                        onComplete: function() {
+
+                                            currentIndex++;
+
+                                            if (currentIndex < hexPath.length) {
+
+                                               // console.log("!#####################");
+                                               // console.log("player.x =", player.x, "currentCoor[0] = ", currentCoor[0]);
+
+                                               //console.log("hexPath")
+
+                                                if (player.x > calculateCoordinates(hexPath[currentIndex])[0]) {
+
+                                                   // console.log("MADE IT EHEHEHRHERE");
+
+                                                    player.anims.play('left');
+                                                } else {
+                                                    player.anims.play('right');
+                                                }
+
+                                                moveToNextHex(hexPath[currentIndex]);
+
+                                            } else {  //moved to last hex in path
+
+                                                player.anims.play('snooze');
+                                                tileIsSelected = false;
+
+                                                let enemyIndex = 0;
+
+                                                arrayOfNearbyEnemies = determineAdjacentEnemies(heroCoor);
+
+                                                console.log("array of adj enemies = ", arrayOfNearbyEnemies);
+
+                                                if (arrayOfNearbyEnemies.length === 0) {
+
+                                                    doEnemyMoves();
+
+                                                } else {  //There are adjacent enemies
+
+                                                    awaitingEnemySelection = true;
+
+                                                }
+
+                                               // let continueLoop = true;
+
+                                                // for (let i = 0; i < enemyArray.length; i++) {
+
+                                                //     //let currentEnemyCoor = enemyArray[i].coor;
+
+                                                //     console.log("enemyArray[i].coor =  ", enemyArray[i].coor);
+
+                                                //     let adjacentHeroCoors = determineAdjacentHeroes(enemyArray[i].coor);
+
+
+
+                                                //     if (adjacentHeroCoors.length === 0) {
+
+
+                                                //         //pick hex from six avaiable that is closest.
+                                                //         //if theres a tie random select one
+                                                //         //move to that hex if you can
+                                                //         //other wise move to the closest available hex.  Break ties
+                                                //         //with random
+
+                                                //         let targetHex = pickHexAdjacentHerotoMoveTo(heroCoor, enemyArray[i].coor);
+
+                                                //         console.log("targetHex = ", targetHex);
+
+                                                //         let enemyRange = 4;
+                                                //         let distanceToTarget = determineDepth(targetHex, enemyArray[i].coor);
+
+                                                //         console.log("Distance to target = ", distanceToTarget);
+
+                                                //         if (enemyRange < distanceToTarget) {
+
+                                                //             let enemyAvailableMoves = generateAvailableMoves(enemyArray[i].coor, enemyRange);
+
+                                                //             //let closerTargerHex = pickHexClosestToTarget(enemyRange, targetHex);
+
+                                                //             let currentClosest = 100;
+                                                //             let choiceIndex;
+
+                                                //             for (let i = 0; i < enemyAvailableMoves.length; i++) {
+
+                                                //                 let currentHexDistance = determineDepth(targetHex, enemyAvailableMoves[i]);
+                                                //                 if (currentHexDistance <= currentClosest) {
+                                                //                     currentClosest = currentHexDistance;
+                                                //                     choiceIndex = i;
+                                                //                 }
+                                                //             }
+
+                                                //             let closerTargetHex = enemyAvailableMoves[choiceIndex];
+
+                                                //             //console.log("closerTargetHex = ", closerTargetHex);
+
+                                                //             let enemyHexPath = determinePath(closerTargetHex, enemyArray[i].coor);
+
+                                                //             enemyMoveToNextHex(enemy, enemyHexPath, enemyArray[i].coor);
+
+                                                //             //console.log("enemeyHexPath at end = ", enemyHexPath)
+
+                                                //             enemyArray[i].coor = enemyHexPath[enemyHexPath.length - 1];
+
+
+
+                                                //         }   else {  // target hex is within range of enemy move points
+
+                                                //             let enemyAvailableMoves = generateAvailableMoves(enemyArray[i].coor, enemyRange);
+                                                //             let enemyHexPath = determinePath(targetHex, enemyArray[i].coor);
+
+                                                //             console.log("enemyHex Path = ", enemyHexPath);
+
+                                                //             enemyMoveToNextHex(enemy, enemyHexPath, enemyArray[i].coor);
+
+                                                //             console.log("enemeyHexPath at end = ", enemyHexPath)
+
+                                                //             enemyArray[i].coor = enemyHexPath[enemyHexPath.length - 1];
+
+
+
+                                                //         }
+
+
+                                                //     } else { // there are nearby heroes
+
+                                                //     enemyAttackHero(heroCoor, enemyCoor, enemy);
+
+                                                //     }
+                                                // }// for loop through enemyArray
+                                            }
+                                        }
+                                    });
+                               // }
+                            }
+
+
+
+
+
+                            // function pickHexClosestToTarget(range, targetHex) {
+
+
+                            // }
+
+
+
+
+
+
+                            // for (let i = 0; i < hexPath.length; i++) {
+
+                            //     currentCoor = calculateCoordinates(hexPath[i]);
+                            //     if (player.x > currentCoor[0]) {
+                            //         player.anims.play('left', true);
+                            //     } else {
+                            //         player.anims.play('right', true);
+                            //     }
+
+                            //     playerTween = this.tweens.add({
+                            //         targets: player,
+                            //         x: currentCoor[0],
+                            //         y: currentCoor[1] - 15,
+                            //         durantion: 1000,
+                            //         onComplete: function() {
+
+                            //         }
+                            //     });
+
+                            // }
+
+                            // if (player.x > hexClickedCoor[0]) {
+                            //     player.anims.play('left', true);
+                            // } else {
+                            //     player.anims.play('right', true);
+                            // }
+
+                            // var playerTween = this.tweens.add({
+                            //     targets: player,
+                            //     x: hexClickedCoor[0],
+                            //     y: hexClickedCoor[1] - 15,
+                            //     duration: 500,
+                            //     onComplete: function() {
+
+
+
+
+                       // heroCoor = hexClicked;
+                       // heroCoorCoor = calculateCoordinates(heroCoor);
+
+                          //           grid[heroCoor[1]][heroCoor[0]] = 0;
+                          //           heroCoor = hexClicked;
+                          //           destination = hexClicked;
+                          //           grid[hexClicked[1]][hexClicked[0]] = 1;
+
+                          //           player.anims.stop();
+
+                          //           heroCoorCoor = calculateCoordinates(heroCoor);
+
+                          //           let heroesInRange = determineHeroesInRange(enemyCoor, 10);
+
+                          //           if (heroesInRange.length >= 1) {
+
+                          // //  console.log("got here purple");
+                          // //  enemyRangedAttack();
+
+                          //               let bulletCoor = calculateCoordinates(enemyCoor);
+                          //               bullet.setActive(true);
+                          //               bullet.setVisible(true);
+                          //               bullet.x = bulletCoor[0] - 5;
+                          //               bullet.y = bulletCoor[1] - 5;
+
+                          //               var bulletTween = selfScene.tweens.add({
+                          //                   targets: bullet,
+                          //                   x: heroCoorCoor[0] - 5,
+                          //                   y: heroCoorCoor[1] - 10,
+                          //                   duration: 600,
+                          //                   onComplete: function () {
+                          //                       bullet.setActive(false);
+                          //                       bullet.setVisible(false);
+                          //                   },
+                          //               });
+                          //           }
+                          //      }
+                          //  });
+                        } else {
+                            arrayOfNearbyEnemies = determineAdjacentEnemies(heroCoor);
+                            if (arrayIncludesCoordinates(arrayOfNearbyEnemies, hexClicked)) {
+                                starGroup.getChildren().forEach(function(elm) {
+                                    if (elm.active) {
+                                        elm.destroy();
+                                    }
+                                    //elm.clear(false, true);
+                                });
+
+                                starGroup.clear();
+
+                                tileIsSelected = false;
+
+                                heroAttackEnemy(hexClicked);
+                            }
+                        }
+                    }
+
+                } else {   //here we are waiting for player to click on an adjacent enemy
+
+                    if (arrayIncludesCoordinates(arrayOfNearbyEnemies, hexClicked)) {
+
+                        //console.log("!!!!!!!");
+                        heroAttackEnemy(hexClicked);
+
+
+                    } else {
+
+
+                        //console.log("OHOHOHOHO");
+                    }
+
+                }
+            }
+
+            // console.log("AAA", playerSelected[0]);
+            // if (playerSelected[0] && objectIsSelected)
+            // {
+
+
+
+            //     movingTo[0] = pointer.x;
+            //     movingTo[1] = pointer.y;
+
+
+            //     if (playerSelected[1] < movingTo[0]) {
+            //         movingRight = true;
+            //     }
+
+
+
+            //     if (playerSelected[1] > movingTo[0]) {
+            //         //console.log("playerSelected[1] = ",playerSelected[1], "movingTo=", movingTo[0]);
+            //         movingLeft = true;
+            //     }
+
+            //     // if (playerSelected[2] > movingTo[1]) {
+            //     //     movingDown = true;
+            //     // }
+
+
+            //     // console.log("Feeling it");
+
+            //     // player.setVelocityX(160);
+
+            //     // player.anims.play('right', true);
+
+            //     playerMoving = true;
+            //     objectIsSelected = false;
+
+            //    // console.log("second moving to of x = ", movingTo[0]);
+
+           // }
+            console.log("spaz", pointer.x, pointer.y);
+
+        }, this);
+
+    }
+
+    function update ()  {
+    }
+
+    function heroAttackEnemy(enemyHex) {
+
+        let enemySprite;
+
+       // console.log("enemy.coor = ", enemy.coor, "enemyHex = ", enemyHex);
+
+        if (arrayIncludesCoordinates([enemy.coor], enemyHex)) {
+            enemySprite = enemy;
+            enemy.hitPoints--;
+            if (enemy.hitPoints === 0 && enemyDying === false) {
+                enemyDying = true;
+            }
+        }
+        if (arrayIncludesCoordinates([enemyB.coor], enemyHex)) {
+            enemyB.hitPoints--;
+            if (enemyB.hitPoints === 0 && enemyBDying === false) {
+                enemyBDying = true;
+            }
+            enemySprite = enemyB;
+        }
+        if (arrayIncludesCoordinates([enemyC.coor], enemyHex)) {
+            enemyC.hitPoints--;
+            if (enemyC.hitPoints === 0 && enemyCDying === false) {
+                enemyCDying = true;
+            }
+            enemySprite = enemyC;
+        }
+
+        //enemySprite.hitPoints--;
+
+        if (player.x > enemySprite.x) {
+            player.anims.play('heroAttackLeft');
+        } else {
+            player.anims.play('heroAttack');
+        }
+
+        //console.log("enemy Sprite.coor = ", enemySprite.coor);
+
+
+    }
+
+    function heroAttackComplete(sprite) {
+        sprite.anims.play('snooze');
+        awaitingEnemySelection = false;
+        doEnemyMoves();
+    }
+
+    function attackComplete(sprite) {
+        //console.log("boom shaka laka");
+        sprite.anims.play('barbSnooze');
+        enemyIndex++;
+        sprite.attackingThisTurn = false;
+        doEnemyMoves();
+    }
+
+    function clickFunc(player)
+    {
+       // player.off('clicked', clickFunc);
+      //  console.log("Boom!");
+        console.log("clickfunc", player.x, player.y);
+        //console.log(player);
+
+       // playerSelected = [player, player.x, player.y];
+       // objectIsSelected = true;
+    }
+
+    function determineWhichHex(pointx, pointy) {
+
+          var hexagonWidth = 54;
+          var hexagonHeight = 58;
+          var sectorWidth = hexagonWidth;
+          var sectorHeight = hexagonHeight/4*3;
+          var gradient = (hexagonHeight/4)/(hexagonWidth/2);
+          var candidateX = Math.floor((pointx)/sectorWidth);
+          var candidateY = Math.floor((pointy)/sectorHeight);
+          var deltaX = (pointx)%sectorWidth;
+          var deltaY = (pointy)%sectorHeight;
+          if(candidateY%2==0){
+               if(deltaY<((hexagonHeight/4)-deltaX*gradient)){
+                    candidateX--;
+                    candidateY--;
+               }
+               if(deltaY<((-hexagonHeight/4)+deltaX*gradient)){
+                    candidateY--;
+               }
+          }
+          else{
+               if(deltaX>=hexagonWidth/2){
+                    if(deltaY<(hexagonHeight/2-deltaX*gradient)){
+                         candidateY--;
+                    }
+               }
+               else{
+                    if(deltaY<deltaX*gradient){
+                         candidateY--;
+                    }
+                    else{
+                         candidateX--;
+                    }
+               }
+          }
+
+        console.log("candidateX = ", candidateX);
+        console.log("candidateY = ", candidateY);
+
+        return [candidateX, candidateY];
+
+    }
+
+// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    function determinePath(hex, guyCoor) {
+
+        let output = [];
+
+        let currentHex = cameFromGrid[hex[1]][hex[0]];
+       // console.log("temp = ", temp);
+
+       // output.push(currentHex);
+
+     //  console.log("heroCoor 2 = ", heroCoor);
+
+    for (let i = 0; i < 1000; i++) {
+
+        if (arrayIncludesCoordinates(guyCoor, currentHex)) break;
+
+        output.push(currentHex);
+
+        currentHex = cameFromGrid[currentHex[1]][currentHex[0]];
+
+
+
+    }
+
+    output.pop();
+
+    output.reverse();
+
+    output.push(hex);
+
+   // console.log("We made it captain!");
+
+  //  console.log("path = ", output);
+    return output;
+    }
+
+
+
+    function tileCanBeSelected(hex) {
+
+        let output = false;
+
+        if (grid[hex[1]][hex[0]] === 1) {
+
+            console.log("You're the man now Dog");
+            output = true;
+        }
+
+        return output;
+    }
+
+    // function displayAvailableMoves(hex, movePoints) {
+
+    //     // generate array of availabe moves
+
+    //     let xCoordinate = hex[0] * 30;
+    //     let yCoordinate = hex[1] * 28;
+
+    //     star = this.physics.add.sprite(xCoordinate, yCoordinate, 'star');
+
+
+    // }
+
+    function calculateCoordinates(hex) {
+
+        let x;
+        let y = (hex[1] * 58 * 3/4) + 27;
+
+        if (hex[1] % 2 === 0) {
+            x = (hex[0] * 54) + 27;
+        }
+
+        else {
+            x = (hex[0] * 54) + 54;
+        }
+
+        return [x, y];
+
+    }
+
+    function arrayIncludesCoordinates(array, coordinates) {
+
+        output = false;
+
+        for (let i = 0; i < array.length; i++) {
+            if (array[i][0] === coordinates[0]) {
+                if (array[i][1] === coordinates[1]) {
+                    output = true;
+                }
+            }
+        }
+
+        return output;
+    }
+
+    function determineHeroesInRange(pos, range) {
+
+        let output = [];
+        let frontier = [];
+        let visited = [pos];
+        let coor;
+        //let depth = 0;
+        let keepPushing = true;
+        //let subRange = range;
+       // let elementsUntilDepthIncrease = 0;
+       // let nextElementsUntilDepthIncrease = 0;
+       // let depth = 0;
+       // let temp;
+
+
+        //console.log("POS = ", pos);
+        //console.log(pos[0] % 2);
+
+        //check if we're starting on an even row
+        if (pos[1] % 2 === 0) {
+
+          //  console.log("GOT OVER HERE");   @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+            // up left
+            frontier.push([pos[0] - 1, pos[1] - 1]);
+            visited.push([pos[0] - 1, pos[1] - 1]);
+
+            // left
+            frontier.push([pos[0] - 1, pos[1]]);
+            visited.push([pos[0] - 1, pos[1]]);
+
+            // down left
+            frontier.push([pos[0] - 1, pos[1] + 1]);
+            visited.push([pos[0] - 1, pos[1] + 1]);
+
+            // down right
+            frontier.push([pos[0], pos[1] + 1]);
+            visited.push([pos[0], pos[1] + 1]);
+
+            // right
+            frontier.push([pos[0] + 1, pos[1]]);
+            visited.push([pos[0] + 1, pos[1]]);
+
+            // up right
+            frontier.push([pos[0], pos[1] - 1]);
+            visited.push([pos[0], pos[1] - 1]);
+
+        // odd rows
+        } else {
+
+           // console.log("BOOOOOOOOM");
+
+            //up left
+            frontier.push([pos[0], pos[1] - 1]);
+            visited.push([pos[0], pos[1] - 1]);
+
+            // left
+            frontier.push([pos[0] - 1, pos[1]]);
+            visited.push([pos[0] - 1, pos[1]]);
+
+            // down left
+            frontier.push([pos[0], pos[1] + 1]);
+            visited.push([pos[0], pos[1] + 1]);
+
+            // down right
+            frontier.push([pos[0] + 1, pos[1] + 1]);
+            visited.push([pos[0] + 1, pos[1] + 1]);
+
+            // right
+            frontier.push([pos[0] + 1, pos[1]]);
+            visited.push([pos[0] + 1, pos[1]]);
+
+            // up right
+            frontier.push([pos[0] + 1, pos[1] - 1]);
+            visited.push([pos[0] + 1, pos[1] - 1]);
+        }
+
+        while (frontier.length !== 0) {
+
+            //21, 4      21,3      22,2    22, 1     23,0
+
+            //  for (let i = 0; i < 1000; i++) {
+
+            coor = frontier.pop();
+           // depth--;
+
+            keepPushing = true;
+
+            //console.log("depth of coor for coor=", coor, " depth = ", determineDepth(coor, pos));
+
+            if (determineDepth(coor, pos) > range) {
+                keepPushing = false;
+            }
+
+           // console.log("coor = ", coor);
+           // console.log("depth of coor", determineDepth(coor, pos));
+
+            if (grid[coor[1]][coor[0]] === 1 && keepPushing) {
+                output.push(coor);
+           //     console.log("!!!! temp = ", temp);
+            }
+
+            if (coor[1] % 2 === 0) {
+
+                //console.log("coor = ", coor);
+
+
+                // up left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1] - 1]) && coor[0] - 1 >= 0 && coor[1] - 1 >= 0 && keepPushing ) {
+
+                    frontier.push([coor[0] - 1, coor[1] - 1]);
+                    visited.push([coor[0] - 1, coor[1] - 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+                // left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1]]) && coor[0] - 1 >= 0 && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1]]);
+                    visited.push([coor[0] - 1, coor[1]]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+
+                // down left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1] + 1]) && coor[0] - 1 >= 0 && coor[1] + 1 <= MAXHEIGHT && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1] + 1]);
+                    visited.push([coor[0] - 1, coor[1] + 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+                // down right
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] + 1]) && coor[1] + 1 <= MAXHEIGHT && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] + 1]);
+                    visited.push([coor[0], coor[1] + 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                // right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1]]) && coor[0] + 1 <= MAXWIDTH && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1]]);
+                    visited.push([coor[0] + 1, coor[1]]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                // up right
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] - 1]) && coor[1] - 1 >= 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] - 1]);
+                    visited.push([coor[0], coor[1] - 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+            } else {  //odd rows
+
+                //up left
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] - 1]) && coor[1] - 1 >= 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] - 1]);
+                    visited.push([coor[0], coor[1] - 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                // left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1]]) && coor[0] - 1 >= 0 && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1]]);
+                    visited.push([coor[0] - 1, coor[1]]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                //down left
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] + 1]) && coor[1] + 1 <= MAXHEIGHT && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] + 1]);
+                    visited.push([coor[0], coor[1] + 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                //down right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1] + 1]) && coor[0] + 1 <= MAXWIDTH && coor[1] + 1 <= MAXHEIGHT && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1] + 1]);
+                    visited.push([coor[0] + 1, coor[1] + 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                //right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1]]) && coor[0] + 1 <= MAXWIDTH && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1]]);
+                    visited.push([coor[0] + 1, coor[1]]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                }
+
+                //up right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1] - 1]) && coor[0] + 1 <= MAXWIDTH && coor[1] - 1 >= 0 && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1] - 1]);
+                    visited.push([coor[0] + 1, coor[1] - 1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+
+                }
+            }
+
+           // if (grid[coor[1]][coor[0]] === 1) {
+             //   output.push(coor);
+           // }
+
+
+
+
+        }
+
+        return output;
+    }
+
+    function determineAdjacentHeroes(pos) {
+
+        let output = [];
+
+        if (pos[1] % 2 === 0) {
+
+            // up left
+            if (pos[0] - 1 >= 0 && pos[1] - 1 >= 0) {
+                if (grid[pos[1] - 1][pos[0] - 1] === 1) {
+                    output.push([pos[0] - 1, pos[1] - 1]);
+                }
+            }
+
+            // left
+            if (pos[0] - 1 >= 0) {
+                if (grid[pos[1]][pos[0] - 1] === 1) {
+                    output.push([pos[0] - 1, pos[1]]);
+                }
+            }
+
+            // down left
+            if (pos[0] - 1 >= 0 && pos[1] + 1 <= MAXHEIGHT) {
+                if (grid[pos[1] + 1][pos[0] - 1] === 1) {
+                    output.push([pos[0] - 1, pos[1] + 1]);
+                }
+            }
+
+            // down right
+            if (pos[1] + 1 <= MAXHEIGHT) {
+                if (grid[pos[1] + 1][pos[0]] === 1) {
+                    output.push([pos[0], pos[1] + 1]);
+                }
+            }
+
+            // right
+            if (pos[0] + 1 <= MAXWIDTH) {
+                if (grid[pos[1]][pos[0] + 1] === 1) {
+                    output.push([pos[0] + 1, pos[1]]);
+                }
+            }
+
+            // up right
+            if (pos[1] - 1 >= 0) {
+                if (grid[pos[1] - 1][pos[0]] === 1) {
+                    output.push([pos[0], pos[1] - 1]);
+                }
+            }
+
+        } else {    //odd rows
+
+            // up left
+            if (pos[1] - 1 >= 0) {
+                if (grid[pos[1] - 1][pos[0]] === 1) {
+                    output.push([pos[0], pos[1] - 1]);
+                }
+            }
+
+            //left
+            if (pos[0] - 1 >= 0) {
+                if (grid[pos[1]][pos[0] - 1] === 1) {
+                    output.push([pos[0] - 1, pos[1]]);
+                }
+            }
+
+            //down left
+            if (pos[1] + 1 <= MAXHEIGHT) {
+                if (grid[pos[1] + 1][pos[0]] === 1) {
+                    output.push([pos[0], pos[1] + 1]);
+                }
+            }
+
+            //down right
+            if (pos[0] + 1 <= MAXWIDTH && pos[1] + 1 <= MAXHEIGHT) {
+                if (grid[pos[1] + 1][pos[0] + 1] === 1) {
+                    output.push([pos[0] + 1, pos[1] + 1]);
+                }
+            }
+
+            //right
+            if (pos[0] + 1 <= MAXWIDTH) {
+                if (grid[pos[1]][pos[0] + 1] === 1) {
+                    output.push([pos[0] + 1, pos[1]]);
+                }
+            }
+
+            //up right
+            if (pos[1] - 1 >= 0 && pos[0] + 1 <= MAXWIDTH) {
+                if (grid[pos[1] - 1][pos[0] + 1] === 1) {
+                    output.push([pos[0] + 1, pos[1] - 1]);
+                }
+            }
+
+        }
+
+
+        return output;
+
+
+    }
+
+    function generateAvailableMoves(pos, range) {
+
+        let output = [];
+        let frontier = [];
+        let visited = [pos];
+        let coor;
+        let keepPushing = true;
+        //let subRange = range;
+       // let elementsUntilDepthIncrease = 0;
+       // let nextElementsUntilDepthIncrease = 0;
+      //  let elementsCounter = 0;
+       // let depth = 0;
+       // let visitedNextArray = [];
+
+       // let temp;
+
+        cameFromGrid =     [[[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []],
+                            [[], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []]];
+
+
+        //console.log("POS = ", pos);
+        //console.log(pos[0] % 2);
+
+        //check if we're starting on an even row
+        if (pos[1] % 2 === 0) {
+
+            console.log("pos = ", pos);
+
+            // up left
+
+            if (pos[0] - 1 >= 0 && pos[1] - 1 >= 0 && grid[pos[1] - 1][pos[0] - 1] === 0) {
+                frontier.push([pos[0] - 1, pos[1] - 1]);
+                visited.push([pos[0] - 1, pos[1] - 1]);
+
+                cameFromGrid[pos[1] - 1][pos[0] - 1] = pos;
+             //   elementsUntilDepthIncrease++;
+            }
+
+            // left
+
+            if (pos[0] - 1 >= 0 && grid[pos[1]][pos[0] - 1] === 0) {
+                frontier.push([pos[0] - 1, pos[1]]);
+                visited.push([pos[0] - 1, pos[1]]);
+
+                cameFromGrid[pos[1]][pos[0] - 1] = pos;
+             //   elementsUntilDepthIncrease++;
+
+            }
+
+            // down left
+            if (pos[0] - 1 >= 0 && pos[1] + 1 <= MAXHEIGHT && grid[pos[1] + 1][pos[0] - 1] === 0) {
+                frontier.push([pos[0] - 1, pos[1] + 1]);
+                visited.push([pos[0] - 1, pos[1] + 1]);
+
+                cameFromGrid[pos[1] + 1][pos[0] - 1] = pos;
+              ///  elementsUntilDepthIncrease++;
+            }
+
+            // down right
+            if (pos[1] + 1 <= MAXHEIGHT && grid[pos[1] + 1][pos[0]] === 0) {
+                frontier.push([pos[0], pos[1] + 1]);
+                visited.push([pos[0], pos[1] + 1]);
+
+                cameFromGrid[pos[1] + 1][pos[0]] = pos;
+              //  elementsUntilDepthIncrease++;
+            }
+
+            // right
+            if (pos[0] + 1 <= MAXWIDTH && grid[pos[1]][pos[0] + 1] === 0) {
+                frontier.push([pos[0] + 1, pos[1]]);
+                visited.push([pos[0] + 1, pos[1]]);
+
+                cameFromGrid[pos[1]][pos[0] + 1] = pos;
+             //   elementsUntilDepthIncrease++;
+            }
+
+            // up right
+            if (pos[1] - 1 >= 0 && grid[pos[1] - 1][pos[0]] === 0) {
+                frontier.push([pos[0], pos[1] - 1]);
+                visited.push([pos[0], pos[1] - 1]);
+
+                cameFromGrid[pos[1] - 1][pos[0]] = pos;
+              //  elementsUntilDepthIncrease++;
+            }
+
+        // odd rows
+        } else {
+
+           // console.log("BOOOOOOOOM");
+
+            //up left
+            if (pos[1] - 1 >= 0 && grid[pos[1] - 1][pos[0]] === 0) {
+                frontier.push([pos[0], pos[1] - 1]);
+                visited.push([pos[0], pos[1] - 1]);
+
+                cameFromGrid[pos[1] - 1][pos[0]] = pos;
+              //  elementsUntilDepthIncrease++;
+            }
+
+            // left
+            if (pos[0] - 1 >= 0 && grid[pos[1]][pos[0] - 1] === 0) {
+                frontier.push([pos[0] - 1, pos[1]]);
+                visited.push([pos[0] - 1, pos[1]]);
+
+                cameFromGrid[pos[1]][pos[0] - 1] = pos;
+             //   elementsUntilDepthIncrease++;
+            }
+
+            // down left
+            if (pos[1] + 1 <= MAXHEIGHT && grid[pos[1] + 1][pos[0]] === 0) {
+                frontier.push([pos[0], pos[1] + 1]);
+                visited.push([pos[0], pos[1] + 1]);
+
+                cameFromGrid[pos[1] + 1][pos[0]] = pos;
+             //   elementsUntilDepthIncrease++;
+            }
+
+            // down right
+            if (pos[0] + 1 <= MAXWIDTH && pos[1] + 1 <= MAXHEIGHT && grid[pos[1] + 1][pos[0] + 1] === 0) {
+                frontier.push([pos[0] + 1, pos[1] + 1]);
+                visited.push([pos[0] + 1, pos[1] + 1]);
+
+                cameFromGrid[pos[1] + 1][pos[0] + 1] = pos;
+             //   elementsUntilDepthIncrease++;
+
+            }
+
+            // right
+            if (pos[0] + 1 <= MAXWIDTH && grid[pos[1]][pos[0] + 1] === 0) {
+                frontier.push([pos[0] + 1, pos[1]]);
+                visited.push([pos[0] + 1, pos[1]]);
+
+                cameFromGrid[pos[1]][pos[0] + 1] = pos;
+             //   elementsUntilDepthIncrease++;
+            }
+
+            // up right
+            if (pos[0] + 1 <= MAXWIDTH && pos[1] - 1 >= 0 && grid[pos[1] - 1][pos[0] + 1] === 0) {
+                frontier.push([pos[0] + 1, pos[1] - 1]);
+                visited.push([pos[0] + 1, pos[1] - 1]);
+
+                cameFromGrid[pos[1] - 1][pos[0] + 1] = pos;
+               // elementsUntilDepthIncrease++;
+            }
+        }
+
+       // visitedNextArray = visited.slice(0);
+        //console.log("visitedNextArray = ", visitedNextArray);
+
+        while (frontier.length !== 0) {
+
+            //21, 4      21,3      22,2    22, 1     23,0
+
+            //  for (let i = 0; i < 1000; i++) {
+
+            coor = frontier.shift();
+           // depth--;
+
+            keepPushing = true;
+
+           // elementsCounter++;
+
+            // if (elementsCounter === elementsUntilDepthIncrease) {
+
+            //     console.log("elementsCounter = ", elementsCounter);
+            //     console.log("elementsUntilDepthIncrease = ", elementsUntilDepthIncrease);
+            //     console.log("nextElementsUntilDepthIncrease = ", nextElementsUntilDepthIncrease);
+
+            //     elementsUntilDepthIncrease = nextElementsUntilDepthIncrease;
+            //     nextElementsUntilDepthIncrease = 0;
+            //     elementsCounter = 0;
+            //     depth++;
+            // }
+
+           // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0], coor[1]);
+
+           // console.log("depth = ", depth);
+
+            //console.log("depth of coor for coor=", coor, " depth = ", determineDepth(coor, pos));
+
+            // if (depth >= range) {
+            //     keepPushing = false;
+            // } else {
+            //     keepPushing = true;
+            // }
+
+            if (determineDepth(coor, pos) > range) {
+                keepPushing = false;
+            }
+
+           // console.log("coor = ", coor);
+           // console.log("depth of coor", determineDepth(coor, pos));
+
+
+           //console.log("coor[1] = ", coor[1], "coor[0] = ", coor[0]);
+
+            if (grid[coor[1]][coor[0]] === 0 && keepPushing) {
+                output.push(coor);
+           //     console.log("!!!! temp = ", temp);
+            }
+
+            if (coor[1] % 2 === 0) {
+
+                //console.log("coor = ", coor);
+
+
+                // up left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1] - 1]) && coor[0] - 1 >= 0 && coor[1] - 1 >= 0 && grid[coor[1] - 1][coor[0] - 1] === 0 && keepPushing ) {
+
+                    frontier.push([coor[0] - 1, coor[1] - 1]);
+                    visited.push([coor[0] - 1, coor[1] - 1]);
+
+                    cameFromGrid[coor[1] - 1][coor[0] - 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] - 1, coor[1] - 1);
+
+                    //console.log("A");
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+                // left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1]]) && coor[0] - 1 >= 0 && grid[coor[1]][coor[0] - 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1]]);
+                    visited.push([coor[0] - 1, coor[1]]);
+
+                    cameFromGrid[coor[1]][coor[0] - 1] = coor;
+                  //  nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] - 1, coor[1]);
+
+                   // console.log("B");
+
+                    // if (arrayIncludesCoordinates([coor], [3,2])) {
+                    //     console.log("coor = ", coor);
+                    //     console.log("cameFromGrid at 2,2 = ", cameFromGrid[2][2]);
+                    // }
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+
+                // down left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1] + 1]) && coor[0] - 1 >= 0 && coor[1] + 1 <= MAXHEIGHT && grid[coor[1] + 1][coor[0] - 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1] + 1]);
+                    visited.push([coor[0] - 1, coor[1] + 1]);
+
+                    cameFromGrid[coor[1] + 1][coor[0] - 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] - 1, coor[1] + 1);
+
+
+                   // console.log("C");
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+                }
+
+                // down right
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] + 1]) && coor[1] + 1 <= MAXHEIGHT && grid[coor[1] + 1][coor[0]] === 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] + 1]);
+                    visited.push([coor[0], coor[1] + 1]);
+
+                    cameFromGrid[coor[1] + 1][coor[0]] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0], coor[1] + 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                   // console.log("D");
+
+                }
+
+                // right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1]]) && coor[0] + 1 <= MAXWIDTH && grid[coor[1]][coor[0] + 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1]]);
+                    visited.push([coor[0] + 1, coor[1]]);
+
+                    cameFromGrid[coor[1]][coor[0] + 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] + 1, coor[1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                   // console.log("E");
+
+                }
+
+                // up right
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] - 1]) && coor[1] - 1 >= 0 && grid[coor[1] - 1][coor[0]] === 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] - 1]);
+                    visited.push([coor[0], coor[1] - 1]);
+
+                    cameFromGrid[coor[1] - 1][coor[0]] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0], coor[1] - 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                  //  console.log("F");
+
+                }
+
+            } else {  //odd rows
+
+                //up left
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] - 1]) && coor[1] - 1 >= 0 && grid[coor[1] - 1][coor[0]] === 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] - 1]);
+                    visited.push([coor[0], coor[1] - 1]);
+
+                    cameFromGrid[coor[1] - 1][coor[0]] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0], coor[1] - 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                  //  console.log("G");
+
+                }
+
+                // left
+                if (!arrayIncludesCoordinates(visited, [coor[0] - 1, coor[1]]) && coor[0] - 1 >= 0 && grid[coor[1]][coor[0] - 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] - 1, coor[1]]);
+                    visited.push([coor[0] - 1, coor[1]]);
+
+                    cameFromGrid[coor[1]][coor[0] - 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] - 1, coor[1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                 //   console.log("H");
+
+                }
+
+                //down left
+                if (!arrayIncludesCoordinates(visited, [coor[0], coor[1] + 1]) && coor[1] + 1 <= MAXHEIGHT && grid[coor[1] + 1][coor[0]] === 0 && keepPushing) {
+
+                    frontier.push([coor[0], coor[1] + 1]);
+                    visited.push([coor[0], coor[1] + 1]);
+
+                    cameFromGrid[coor[1] + 1][coor[0]] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0], coor[1] + 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                  //  console.log("I");
+
+                }
+
+                //down right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1] + 1]) && coor[0] + 1 <= MAXWIDTH && coor[1] + 1 <= MAXHEIGHT && grid[coor[1] + 1][coor[0] + 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1] + 1]);
+                    visited.push([coor[0] + 1, coor[1] + 1]);
+
+                    cameFromGrid[coor[1] + 1][coor[0] + 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] + 1, coor[1] + 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                 //   console.log("J");
+
+                }
+
+                //right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1]]) && coor[0] + 1 <= MAXWIDTH && grid[coor[1]][coor[0] + 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1]]);
+                    visited.push([coor[0] + 1, coor[1]]);
+
+                    cameFromGrid[coor[1]][coor[0] + 1] = coor;
+                   // nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] + 1, coor[1]);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                //    console.log("K");
+
+                }
+
+                //up right
+                if (!arrayIncludesCoordinates(visited, [coor[0] + 1, coor[1] - 1]) && coor[0] + 1 <= MAXWIDTH && coor[1] - 1 >= 0 && grid[coor[1] - 1][coor[0] + 1] === 0 && keepPushing) {
+
+                    frontier.push([coor[0] + 1, coor[1] - 1]);
+                    visited.push([coor[0] + 1, coor[1] - 1]);
+
+                    cameFromGrid[coor[1] - 1][coor[0] + 1] = coor;
+                  //  nextElementsUntilDepthIncrease += determineNumberOfChildren(coor[0] + 1, coor[1] - 1);
+
+                    // if (depth < range) {
+                    //     elementsUntilDepthIncrease++;
+                    // }
+
+                  //  console.log("L");
+
+
+                }
+            }
+
+           // if (grid[coor[1]][coor[0]] === 1) {
+             //   output.push(coor);
+           // }
+
+
+
+
+        }
+
+        //console.log(cameFromGrid[0][0], cameFromGrid[1][0], cameFromGrid[2][0], cameFromGrid[3][0], cameFromGrid[4][0], cameFromGrid[5][0]);
+        //console.log(cameFromGrid);
+       // console.log(cameFromGrid);
+
+       // console.log("came from grid at 2,2 =", cameFromGrid[2][2]);
+
+       let path;
+
+     //  console.log("output = ", output);
+
+       for (let i = output.length - 1; i >= 0; i--) {
+
+          //  console.log("output[i] = ", output[i]);
+
+            path = determinePath(output[i], heroCoor);
+
+           // console.log("path.length = ", path.length);
+
+            if (path.length > range) {
+
+             //   console.log("path.length = ", path.length);
+              //  console.log("range = ", range);
+
+                output.splice(i, 1);
+            }
+
+
+       }
+
+
+
+        return output;
+
+
+
+        function determineNumberOfChildren(x, y) {
+            let numberOfChildren = 0;
+
+
+            //console.log("visited length = ", visited.length);
+
+            //even rows
+
+            if (y % 2 === 0) {
+
+                // up left
+                if (y - 1 >= 0 && x - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y - 1])) {
+                        visitedNextArray.push([x - 1, y - 1]);
+                        if (grid[y - 1][x - 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // left
+                if (x - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y])) {
+                        visitedNextArray.push([x - 1, y]);
+                        if (grid[y][x - 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // down left
+                if (y + 1 <= MAXHEIGHT && x - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y + 1])) {
+                        visitedNextArray.push([x - 1, y + 1]);
+                        if (grid[y + 1][x - 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // down right
+                if (y + 1 <= MAXHEIGHT && x + 1 <= MAXWIDTH) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y + 1])) {
+                        visitedNextArray.push([x + 1, y + 1]);
+                        if (grid[y + 1][x + 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // right
+                if (x + 1 <= MAXWIDTH) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y])) {
+                        visitedNextArray.push([x + 1, y]);
+                        if (grid[y][x + 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // up right
+                if (y - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x, y - 1])) {
+                        visitedNextArray.push([x, y - 1]);
+                        if (grid[y - 1][x] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+
+            // odd rows
+
+            } else {
+
+                // up left
+                if (y - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x, y - 1])) {
+                        visitedNextArray.push([x, y - 1]);
+                        if (grid[y - 1][x] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // left
+                if (x - 1 >= 0) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y])) {
+                        visitedNextArray.push([x - 1, y]);
+                        if (grid[y][x - 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                //down left
+                if (y + 1 <= MAXHEIGHT) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x, y + 1])) {
+                        visitedNextArray.push([x, y + 1]);
+                        if (grid[y + 1][x] === 0) {
+                            numberOfChildren++;
+                         //   console.log("This is a barrage");
+                        }
+                    }
+                }
+
+                // down right
+                if (x + 1 <= MAXWIDTH && y + 1 <= MAXHEIGHT) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y + 1])) {
+                        visitedNextArray.push([x + 1, y + 1]);
+                        if (grid[y + 1][x + 1] === 0) {
+                            numberOfChildren++;
+                          //  console.log("FUCK");
+                        }
+                    }
+                }
+
+                // right
+                if (x + 1 <= MAXWIDTH) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y])) {
+                        visitedNextArray.push([x + 1, y]);
+                        if (grid[y][x + 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+
+                // up right
+                if (y - 1 >= 0 && x + 1 <= MAXWIDTH) {
+                    if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y - 1])) {
+                        visitedNextArray.push([x + 1, y - 1]);
+                        if (grid[y - 1][x + 1] === 0) {
+                            numberOfChildren++;
+                        }
+                    }
+                }
+            }
+
+            //console.log("visited length = ", visited.length);
+            console.log("numberOfChildren = ", numberOfChildren);
+            return numberOfChildren;
+        }
+
+    }
+
+
+
+
+        //temp = coor;
+       //console.log("Frontier = ",frontier, "visited = ", visited, "output = ", output);
+
+
+
+    // function determineNumberOfChildren(x, y) {
+    //     let numberOfChildren = 0;
+
+    //     //even rows
+
+    //     if (y % 2 === 0) {
+
+    //         // up left
+    //         if (y - 1 >= 0 && x - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y - 1])) {
+    //                 visitedNextArray.push([x - 1, y - 1]);
+    //                 if (grid[y - 1][x - 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // left
+    //         if (x - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y])) {
+    //                 visitedNextArray.push([x - 1, y]);
+    //                 if (grid[y][x - 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // down left
+    //         if (y + 1 <= MAXHEIGHT && x - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y + 1])) {
+    //                 visitedNextArray.push([x - 1, y + 1]);
+    //                 if (grid[y + 1][x - 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // down right
+    //         if (y + 1 <= MAXHEIGHT && x + 1 <= MAXWIDTH) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y + 1])) {
+    //                 visitedNextArray.push([x + 1, y + 1]);
+    //                 if (grid[y + 1][x + 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // right
+    //         if (x + 1 <= MAXWIDTH) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y])) {
+    //                 visitedNextArray.push([x + 1, y]);
+    //                 if (grid[y][x + 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // up right
+    //         if (y - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x, y - 1])) {
+    //                 visitedNextArray.push([x, y - 1]);
+    //                 if (grid[y - 1][x] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+
+    //     // odd rows
+
+    //     } else {
+
+    //         // up left
+    //         if (y - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x, y - 1])) {
+    //                 visitedNextArray.push([x, y - 1]);
+    //                 if (grid[y - 1][x] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // left
+    //         if (x - 1 >= 0) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x - 1, y])) {
+    //                 visitedNextArray.push([x - 1, y]);
+    //                 if (grid[y][x - 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         //down left
+    //         if (y + 1 <= MAXHEIGHT) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x, y + 1])) {
+    //                 visitedNextArray.push([x, y + 1]);
+    //                 if (grid[y + 1][x] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // down right
+    //         if (x + 1 <= MAXWIDTH && y + 1 <= MAXHEIGHT) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y + 1])) {
+    //                 visitedNextArray.push([x + 1, y + 1]);
+    //                 if (grid[y + 1][x + 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // right
+    //         if (x + 1 <= MAXWIDTH) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y])) {
+    //                 visitedNextArray.push([x + 1, y]);
+    //                 if (grid[y][x + 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+
+    //         // up right
+    //         if (y - 1 >= 0 && x + 1 <= MAXWIDTH) {
+    //             if (!arrayIncludesCoordinates(visitedNextArray, [x + 1, y - 1])) {
+    //                 visitedNextArray.push([x + 1, y - 1]);
+    //                 if (grid[y - 1][x + 1] === 0) {
+    //                     numberOfChildren++;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return numberOfChildren;
+    // }
+
+    function determineDepth(coord, enemyPos) {
+
+            let coordInCube = oddr_to_cube(coord);
+            let posInCube = oddr_to_cube(enemyPos);
+
+            let output = cube_distance(coordInCube, posInCube);
+
+//            console.log("coordInCube = ", coordInCube, "Pos in cube = ", posInCube);
+
+            function cube_distance(a, b) {
+                return (Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2])) / 2
+            }
+
+            function oddr_to_cube(hex) {
+                var x = hex[0] - (hex[1] - (hex[1]&1)) / 2;
+                var z = hex[1];
+                var y = -x-z;
+                return [x, y, z];
+            }
+
+            return output;
+
+    }
+
+
+
+    function adjustUnitPos () {
+        player.x = testCoor[0];
+        player.y = testCoor[1] - 15;
+    }
+
+    function enemyRangedAttack(heroPos, enemyPos) {
+
+       // this.add.image(enemyPos[0] - 5, enemyPos[1] - 5, 'spark');
+       // spark.setVelocityX(200);
+
+       //console.log("GGGGG got here");
+
+        let bulletCoor = calculateCoordinates(enemyPos);
+
+        bullet.setActive(true);
+        bullet.setVisible(true);
+        bullet.x = bulletCoor[0] - 5;
+        bullet.y = bulletCoor[1] - 5;
+
+        let x;
+        let y;
+
+        let heroCoor = calculateCoordinates(heroPos);
+        let enemyCoor = calculateCoordinates(enemyPos);
+
+        let angle = Phaser.Math.Angle.Between(heroCoor[0], heroCoor[1], enemyCoor[0], enemyCoor[1]);
+
+        x = Math.cos(angle) * 200;
+        y = Math.sin(angle) * 200;
+
+        bullet.setVelocityX(-x);
+        bullet.setVelocityY(-y);
+        // bullet.setAccelerationY(100);
+
+
+        //game.physics.arcade.moveToXY(bullet, player.x, player.y, 0, 3000);
+
+        enemyBulletMoving = true;
+
+        if (x > 0) {
+            enemyBulletMovingLeft = true;
+        } else if (x < 0) {
+            enemyBulletMovingRight = true;
+        }
+
+        if (y > 0) {
+            enemyBulletMovingUp = true;
+        } else if (y < 0) {
+            enemyBulletMovingDown = true;
+        }
+
+        enemyBulletMovingTo = heroPos;
+    }
+
+    // function anEnemyHasDied() {
+
+    //     let output = [];
+
+    //     let enemySprite;
+
+
+
+    // }
+
+    function enemyDies(enemySprite) {
+
+        enemySprite.anims.play('barbDead');
+        console.log("got to this part");
+        enemySprite.isDead = true;
+
+    }
+
+    function enemyFinishedDying(sprite) {
+        doEnemyMoves();
+    }
+
+    function doEnemyMoves() {
+
+        if (enemyDying && !enemy.isDead) {
+
+            enemyDies(enemy);
+            return;
+
+        }
+
+        if (enemyBDying && !enemyB.isDead) {
+
+            enemyDies(enemyB);
+            return;
+        }
+
+        if (enemyCDying && !enemyC.isDead) {
+
+            enemyDies(enemyC);
+            return;
+        }
+
+
+                              //  for (let i = 0; i < enemyArray.length; i++) {
+        if (enemyIndex > enemyArray.length - 1) {
+            return;
+        }
+
+        if (!enemyArray[enemyIndex].isDead) {
+
+            console.log("enemyArray[enemyIndex].coor =  ", enemyArray[enemyIndex].coor);
+            let adjacentHeroCoors = determineAdjacentHeroes(enemyArray[enemyIndex].coor);
+            if (adjacentHeroCoors.length === 0) {
+
+                let targetHex = pickHexAdjacentHerotoMoveTo(heroCoor, enemyArray[enemyIndex].coor);
+
+                if (targetHex.length > 0) {
+
+                    console.log("targetHex = ", targetHex);
+
+                    let enemyRange = 4;
+                    let distanceToTarget = determineDepth(targetHex, enemyArray[enemyIndex].coor);
+
+                    console.log("Distance to target = ", distanceToTarget);
+
+                    if (enemyRange < distanceToTarget) {
+
+                        let enemyAvailableMoves = generateAvailableMoves(enemyArray[enemyIndex].coor, enemyRange);
+
+                                                                //let closerTargerHex = pickHexClosestToTarget(enemyRange, targetHex);
+
+                        let currentClosest = 100;
+                        let choiceIndex;
+
+                        for (let i = 0; i < enemyAvailableMoves.length; i++) {
+
+                            let currentHexDistance = determineDepth(targetHex, enemyAvailableMoves[i]);
+                            if (currentHexDistance <= currentClosest) {
+                                currentClosest = currentHexDistance;
+                                choiceIndex = i;
+                            }
+                        }
+
+                        let closerTargetHex = enemyAvailableMoves[choiceIndex];
+
+                        //console.log("closerTargetHex = ", closerTargetHex);
+
+                        let enemyHexPath = determinePath(closerTargetHex, enemyArray[enemyIndex].coor);
+
+                        enemyMoveToNextHex(enemyArray[enemyIndex], enemyHexPath, enemyArray[enemyIndex].coor);
+
+                        //console.log("enemeyHexPath at end = ", enemyHexPath)
+
+                        enemyArray[enemyIndex].coor = enemyHexPath[enemyHexPath.length - 1];
+
+
+
+                    }  else {  // target hex is within range of enemy move points
+
+                        let enemyAvailableMoves = generateAvailableMoves(enemyArray[enemyIndex].coor, enemyRange);
+                        let enemyHexPath = determinePath(targetHex, enemyArray[enemyIndex].coor);
+
+                        console.log("enemyHex Path = ", enemyHexPath);
+
+                        enemyArray[enemyIndex].attackingThisTurn = true;
+
+                        enemyMoveToNextHex(enemyArray[enemyIndex], enemyHexPath, enemyArray[enemyIndex].coor);
+
+                        console.log("enemeyHexPath at end = ", enemyHexPath)
+                        enemyArray[enemyIndex].coor = enemyHexPath[enemyHexPath.length - 1];
+                    }
+                }
+
+
+            } else { // there are nearby heroes
+
+            enemyAttackHero(heroCoor, enemyArray[enemyIndex].coor, enemyArray[enemyIndex]);
+
+            }
+
+        } else {//enemy is dead
+            enemyIndex++;
+            console.log("peppermint");
+            doEnemyMoves();
+        }
+    }
+
+    function enemyAttackHero(heroAtCoor, enemyAtCoor, enemySprite) {
+
+        if (player.x < enemySprite.x) {
+            enemySprite.anims.play('barbAttackLeft');
+        } else {
+            enemySprite.anims.play('barbAttack');
+        }
+    }
+
+    function pickHexAdjacentHerotoMoveTo(heroPos, enemyPos) {
+
+        let hexUpLeft;
+        let hexLeft;
+        let hexDownLeft;
+        let hexDownRight;
+        let hexRight;
+        let hexUpRight;
+
+        if (heroPos[1] % 2 === 0) {  //even rows
+
+            if (heroPos[0] - 1 >= 0 && heroPos[1] - 1 >= 0 && grid[heroPos[1] - 1][heroPos[0] - 1] === 0) {
+                hexUpLeft = [heroPos[0] - 1, heroPos[1] - 1];
+            }
+            if (heroPos[0] - 1 >= 0 && grid[heroPos[1]][heroPos[0] - 1] === 0) {
+                hexLeft = [heroPos[0] - 1, heroPos[1]];
+            }
+            if (heroPos[0] - 1 >= 0 && heroPos[1] + 1 <= MAXHEIGHT && grid[heroPos[1] + 1][heroPos[0] - 1] === 0) {
+                hexDownLeft = [heroPos[0] - 1, heroPos[1] + 1];
+            }
+            if (heroPos[1] + 1 <= MAXHEIGHT && grid[heroPos[1] + 1][heroPos[0]] === 0) {
+                hexDownRight = [heroPos[0], heroPos[1] + 1];
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && grid[heroPos[1]][heroPos[0] + 1] === 0) {
+                hexRight = [heroPos[0] + 1, heroPos[1]];
+            }
+            if (heroPos[1] - 1 >= 0 && grid[heroPos[1] - 1][heroPos[0]] === 0) {
+                hexUpRight = [heroPos[0], heroPos[1] - 1];
+            }
+
+        } else {  //odd rows
+
+            if (heroPos[1] - 1 >= 0 && grid[heroPos[1] - 1][heroPos[0]] === 0) {
+                hexUpLeft = [heroPos[0], heroPos[1] - 1];
+            }
+            if (heroPos[0] - 1 >= 0 && grid[heroPos[1]][heroPos[0] - 1] === 0) {
+                hexLeft = [heroPos[0] - 1, heroPos[1]];
+            }
+            if (heroPos[1] + 1 <= MAXHEIGHT && grid[heroPos[1] + 1][heroPos[0]] === 0) {
+                hexDownLeft = [heroPos[0], heroPos[1] + 1];
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && heroPos[1] + 1 <= MAXHEIGHT && grid[heroPos[1] + 1][heroPos[0] + 1] === 0) {
+                hexDownRight = [heroPos[0] + 1, heroPos[1] + 1];
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && grid[heroPos[1]][heroPos[0] + 1] === 0) {
+                hexRight = [heroPos[0] + 1, heroPos[1]];
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && heroPos[1] - 1 >= 0 && grid[heroPos[1] - 1][heroPos[0] + 1] === 0) {
+                hexUpRight = [heroPos[0] + 1, heroPos[1] - 1];
+            }
+
+        }
+
+                                // let distanceHexUpLeft = determineDepth(hexUpLeft, enemyPos);
+                                // let distanceHexLeft = determineDepth(hexLeft, enemyPos);
+                                // let distanceHexDownLeft = determineDepth(hexDownLeft, enemyPos);
+                                // let distanceHexDownRight = determineDepth(hexDownRight, enemyPos);
+                                // let distanceHexRight = determineDepth(hexRight, enemyPos);
+                                // let distanceHexUpRight = determineDepth(hexUpRight, enemyPos);
+
+                                //console.log("distance hex up left =", determineDepth(hexUpLeft, enemyPos));
+                                //console.log("distance hex left =", determineDepth(hexLeft, enemyPos));
+                                // console.log("distance hex down left =", distanceHexDownLeft);
+                                // console.log("distance hex down right =", distanceHexDownRight);
+                                // console.log("distance hex right =", distanceHexRight);
+                                // console.log("distance hex up right =", distanceHexUpRight);
+
+        let arrayOfDistances = [];
+
+        if (hexUpLeft) {
+            arrayOfDistances.push(hexUpLeft);
+        }
+        if (hexLeft) {
+            arrayOfDistances.push(hexLeft);
+        }
+        if (hexDownLeft) {
+            arrayOfDistances.push(hexDownLeft);
+        }
+        if (hexDownRight) {
+            arrayOfDistances.push(hexDownRight);
+        }
+        if (hexRight) {
+            arrayOfDistances.push(hexRight);
+        }
+        if (hexUpRight) {
+            arrayOfDistances.push(hexUpRight);
+        }
+
+        if (arrayOfDistances.length > 0) {
+
+            let shortestDistance = determineDepth(arrayOfDistances[0], enemyPos);
+            let closestIndex = 0;
+
+            for (let i = 0; i < arrayOfDistances.length; i++) {
+
+                console.log("depth for array of distances of ", i, " =", determineDepth(arrayOfDistances[i], enemyPos));
+                console.log("hex of i =", arrayOfDistances[i]);
+
+                if (determineDepth(arrayOfDistances[i], enemyPos) < shortestDistance) {
+                    shortestDistance = determineDepth(arrayOfDistances[i], enemyPos);
+                    closestIndex = i;
+                }
+            }
+
+            //console.log("shortestDistance = ", shortestDistance);
+            //console.log("hex chosen = ", arrayOfDistances[closestIndex]);
+
+            return arrayOfDistances[closestIndex];
+
+        } else {
+            return [];
+        }
+    }
+
+    function enemyMoveToNextHex(enemySprite, path, pos) {
+
+        let index = 0;
+
+        console.log("path = ", path);
+
+        let currentEnemyCoor = calculateCoordinates(path[0]);
+        var enemyTween;
+                               // let currentIndex = 0;
+
+        if (enemySprite.x > currentEnemyCoor[0]) {
+            enemySprite.anims.play('barbWalkLeft');
+        } else {
+            enemySprite.anims.play('barbWalk');
+        }
+
+        subMoveToNextHex();
+
+        function subMoveToNextHex() {
+
+            index++;
+
+            playerTween = selfScene.tweens.add({
+                targets: enemySprite,
+                x: currentEnemyCoor[0] - 2,
+                y: currentEnemyCoor[1] - 14,
+                duration: 400,
+                onComplete: function() {
+
+                //console.log("Got over heeeeeereeeee");
+
+                    if (index < path.length) {
+
+                        console.log("path[index] = ", path[index]);
+
+                        currentEnemyCoor = calculateCoordinates(path[index]);
+
+                        if (enemySprite.x > currentEnemyCoor[0]) {
+                            enemySprite.anims.play('barbWalkLeft');
+                        } else {
+                            enemySprite.anims.play('barbWalk');
+                        }
+
+                        subMoveToNextHex();
+
+                    } else { // finished path
+
+                        enemySprite.anims.play('barbSnooze');
+
+                        grid[pos[1]][pos[0]] = 0;
+                        let tempCoor = path[path.length - 1];
+                        grid[tempCoor[1]][tempCoor[0]] = 2;
+
+
+
+                        if (enemySprite.attackingThisTurn){
+
+                            enemyAttackHero(heroCoor, path[path.length - 1], enemySprite);
+                        } else {
+
+                            enemyIndex++;
+
+                            if (enemyIndex < enemyArray.length) {
+
+                            //  console.log("enemyIndex = ", enemyIndex);
+                            //  console.log("enemyArray.lenght = ", enemyArray.length);
+                                doEnemyMoves();
+                            } else {
+                                enemyIndex = 0;
+
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    function determineAdjacentEnemies(heroPos) {
+
+        let output = [];
+
+        if (heroPos[1] % 2 === 0) {  //even rows
+
+            if (heroPos[0] - 1 >= 0 && heroPos[1] - 1 >= 0) {
+                if (grid[heroPos[1] - 1][heroPos[0] - 1] === 2) {
+                    output.push([heroPos[0] - 1, heroPos[1] - 1]);
+                }
+            }
+            if (heroPos[0] - 1 >= 0) {
+                if (grid[heroPos[1]][heroPos[0] - 1] === 2) {
+                    output.push([heroPos[0] - 1, heroPos[1]]);
+                }
+            }
+            if (heroPos[0] - 1 >= 0 && heroPos[1] + 1 <= MAXHEIGHT) {
+                if (grid[heroPos[1] + 1][heroPos[0] - 1] === 2) {
+                    output.push([heroPos[0] - 1, heroPos[1] + 1]);
+                }
+            }
+            if (heroPos[1] + 1 <= MAXHEIGHT) {
+                if (grid[heroPos[1] + 1][heroPos[0]] === 2) {
+                    output.push([heroPos[0], heroPos[1] + 1]);
+                }
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH) {
+                if (grid[heroPos[1]][heroPos[0] + 1] === 2) {
+                    output.push([heroPos[0] + 1, heroPos[1]]);
+                }
+            }
+            if (heroPos[1] - 1 >= 0) {
+                if (grid[heroPos[1] - 1][heroPos[0]] === 2) {
+                    output.push([heroPos[0], heroPos[1] - 1]);
+                }
+            }
+
+        } else {  //odd rows
+
+            if (heroPos[1] - 1 >= 0) {
+                if (grid[heroPos[1] - 1][heroPos[0]] === 2) {
+                    output.push([heroPos[0], heroPos[1] - 1]);
+                }
+            }
+            if (heroPos[0] - 1 >= 0) {
+                if (grid[heroPos[1]][heroPos[0] - 1] === 2) {
+                    output.push([heroPos[0] - 1, heroPos[1]]);
+                }
+            }
+            if (heroPos[1] + 1 <= MAXHEIGHT) {
+                if (grid[heroPos[1] + 1][heroPos[0]] === 2) {
+                    output.push([heroPos[0], heroPos[1] + 1]);
+                }
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && heroPos[1] + 1 <= MAXHEIGHT) {
+                if (grid[heroPos[1] + 1][heroPos[0] + 1] === 2) {
+                    output.push([heroPos[0] + 1, heroPos[1] + 1]);
+                }
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH) {
+                if (grid[heroPos[1]][heroPos[0] + 1] === 2) {
+                    output.push([heroPos[0] + 1, heroPos[1]]);
+                }
+            }
+            if (heroPos[0] + 1 <= MAXWIDTH && heroPos[1] - 1 >= 0) {
+                if (grid[heroPos[1] - 1][heroPos[0] + 1] === 2) {
+                    output.push([heroPos[0] + 1, heroPos[1] - 1]);
+                }
+            }
+        }
+        return output;
+    }
+
+</script>
+
+</body>
+</html>
